@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arabic–English Scholarly Corpus</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;font-size:14px;background:#fff;color:#111;line-height:1.5}
+#header{border-bottom:2px solid #111;padding:16px 22px 12px}
+#header h1{font-size:17px;font-weight:normal}
+#header p{font-size:11px;color:#666;margin-top:3px}
+#header nav{margin-top:8px}
+#header nav a{font-size:12px;color:#333;text-decoration:none;margin-right:16px;border-bottom:1px solid transparent}
+#header nav a:hover,#header nav a.active{border-bottom-color:#111;color:#111}
+#layout{display:flex;min-height:calc(100vh - 80px)}
+#sidebar{width:230px;min-width:230px;border-right:1px solid #ccc;padding:14px 12px;background:#f9f9f9}
+#sidebar h2{font-size:10px;font-weight:bold;letter-spacing:.12em;text-transform:uppercase;color:#555;border-bottom:1px solid #ccc;padding-bottom:5px;margin-bottom:9px}
+.sb-btns{display:flex;gap:5px;margin-bottom:9px}
+.sb-btns button{font-family:Georgia,serif;font-size:11px;padding:2px 7px;border:1px solid #aaa;background:#fff;cursor:pointer;color:#333}
+.sb-btns button:hover{background:#eee}
+#book-list{display:flex;flex-direction:column}
+.book-item{display:flex;align-items:flex-start;gap:7px;padding:5px 3px;border-bottom:1px solid #eee;cursor:pointer}
+.book-item:last-child{border-bottom:none}
+.book-item input{margin-top:2px;flex-shrink:0;cursor:pointer}
+.book-item-name{font-size:12px;color:#222;line-height:1.3}
+.book-item-count{font-size:10px;color:#999;font-family:monospace}
+#main{flex:1;display:flex;flex-direction:column;min-width:0}
+#searchbar{border-bottom:1px solid #ccc;padding:10px 16px;background:#f4f4f4;display:flex;flex-direction:column;gap:7px}
+.search-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#q{flex:1;min-width:200px;padding:5px 8px;font-family:Georgia,serif;font-size:14px;border:1px solid #aaa;background:#fff;color:#111;outline:none}
+#q:focus{border-color:#333}
+select{padding:4px 7px;font-family:Georgia,serif;font-size:12px;border:1px solid #aaa;background:#fff;color:#111;cursor:pointer;outline:none}
+.filter-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.filter-label{font-size:10px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;color:#666;white-space:nowrap}
+.btn-group{display:flex;border:1px solid #aaa;overflow:hidden}
+.btn-group button{font-family:Georgia,serif;font-size:11px;padding:3px 9px;border:none;border-right:1px solid #aaa;background:#fff;color:#555;cursor:pointer}
+.btn-group button:last-child{border-right:none}
+.btn-group button.active{background:#222;color:#fff}
+.btn-group button:hover:not(.active){background:#eee}
+#excl{padding:3px 7px;font-family:Georgia,serif;font-size:12px;border:1px solid #aaa;width:160px;background:#fff;color:#111;outline:none}
+#excl:focus{border-color:#333}
+#stats{padding:5px 16px;font-size:11px;color:#666;border-bottom:1px solid #eee;font-family:monospace;background:#fff}
+#results{overflow-x:auto}
+.ptable{width:100%;border-collapse:collapse;font-size:13px}
+.ptable thead th{text-align:left;font-size:10px;font-weight:bold;letter-spacing:.1em;text-transform:uppercase;color:#666;background:#f0f0f0;border-bottom:2px solid #bbb;border-top:1px solid #ccc;padding:6px 9px}
+.ptable thead th.th-ar{text-align:right}
+.ptable tbody tr{border-bottom:1px solid #e5e5e5}
+.ptable tbody tr:hover{background:#fafafa}
+.td-n{width:30px;padding:7px 3px 7px 8px;font-family:monospace;font-size:10px;color:#bbb;vertical-align:top;border-right:1px solid #eee;text-align:center}
+.td-rel{width:38px;padding:7px 5px;vertical-align:middle;border-right:1px solid #eee}
+.rel-bar{display:block;background:#444;height:7px;min-width:1px}
+.td-src{padding:7px 5px;font-family:monospace;font-size:9px;color:#aaa;vertical-align:top;border-right:1px solid #eee;max-width:70px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.td-en{padding:7px 9px;line-height:1.65;vertical-align:top;border-right:1px solid #eee;width:46%}
+.td-ar{padding:7px 9px;font-family:'Traditional Arabic','Scheherazade New',Arial,sans-serif;font-size:15px;line-height:1.9;direction:rtl;text-align:right;vertical-align:top;width:46%}
+mark{background:#ffe066;color:#111;padding:0 1px}
+mark.m{background:#c8e6ff}
+mark.x{background:#ffb3b3}
+.conc-list{display:flex;flex-direction:column;padding:0 16px}
+.conc-item{padding:6px 0;border-bottom:1px solid #e5e5e5}
+.conc-meta{font-family:monospace;font-size:9px;color:#aaa;margin-bottom:2px;display:flex;gap:10px}
+.conc-en{display:grid;grid-template-columns:1fr auto 1fr;align-items:baseline;font-size:13px}
+.conc-left{text-align:right;color:#333;padding-right:3px;overflow:hidden}
+.conc-kw{font-weight:bold;color:#111;white-space:nowrap;padding:0 2px;background:#ffe066}
+.conc-right{color:#333;padding-left:3px}
+.conc-ar{font-family:'Traditional Arabic','Scheherazade New',Arial,sans-serif;font-size:13px;direction:rtl;text-align:right;color:#777;padding-top:3px}
+.msg{text-align:center;padding:40px 20px;color:#999;font-size:13px;font-style:italic}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid #ddd;border-top-color:#333;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:680px){#layout{flex-direction:column}#sidebar{width:100%;min-width:unset;border-right:none;border-bottom:1px solid #ccc}.td-ar{display:none}}
+</style>
+</head>
+<body>
+<div id="header">
+  <h1>Arabic–English Scholarly Corpus</h1>
+  <p>Parallel texts repository &mdash; ahmedhsalghamdi</p>
+  <nav>
+    <a href="index.html" class="active">Search</a>
+    <a href="analysis.html">Analysis &amp; Statistics</a>
+  </nav>
+</div>
+<div id="layout">
+  <aside id="sidebar">
+    <h2>Texts</h2>
+    <div class="sb-btns">
+      <button onclick="selectAll(true)">Select all</button>
+      <button onclick="selectAll(false)">Clear all</button>
+    </div>
+    <div id="book-list"><div style="font-size:12px;color:#aaa;font-style:italic"><span class="spinner"></span>Loading…</div></div>
+  </aside>
+  <div id="main">
+    <div id="searchbar">
+      <div class="search-row">
+        <input type="text" id="q" placeholder="Search in English or Arabic…" oninput="doSearch()" autocomplete="off">
+        <select id="lang" onchange="doSearch()">
+          <option value="both">Both languages</option>
+          <option value="en">English only</option>
+          <option value="ar">Arabic only</option>
+        </select>
+        <div class="btn-group">
+          <button class="active" onclick="setView('parallel')">Parallel table</button>
+          <button onclick="setView('conc')">Concordance</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">Match:</span>
+        <div class="btn-group" id="mode-btns">
+          <button class="active" onclick="setMode('any')">Any order</button>
+          <button onclick="setMode('exact')">Exact phrase</button>
+          <button onclick="setMode('or')">Any word</button>
+        </div>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap">
+          <input type="checkbox" id="morpho" onchange="rebuild()" checked>
+          Morphology
+          <span style="font-size:10px;color:#999;font-style:italic">(كاتب/كتبت/مكتوب = كتب &nbsp;·&nbsp; ran/shown = run/show)</span>
+        </label>
+        <span class="filter-label">Exclude:</span>
+        <input type="text" id="excl" placeholder="word or phrase…" oninput="doSearch()">
+      </div>
+    </div>
+    <div id="stats">Ready.</div>
+    <div id="results"><div class="msg"><span class="spinner"></span>Loading corpus files…</div></div>
+  </div>
+</div>
+
+<script>
+const REPO='ahmedhsalghamdi/arabic-english-scholarly-corpus',BRANCH='main';
+let books=[],view='parallel',mode='any';
+// Pre-computed per-book index: {name, pairs, enLems[], arRoots[], enDF{}, arDF{}, enAvgLen, arAvgLen}
+let bookIndices=[];
+
+// ── ENGLISH LEMMATISER ──────────────────────────────────────────────────────
+const EN_IRREG={ran:'run',runs:'run',running:'run',went:'go',goes:'go',going:'go',gone:'go',was:'be',were:'be',is:'be',are:'be',been:'be',being:'be',had:'have',has:'have',having:'have',did:'do',does:'do',doing:'do',done:'do',said:'say',says:'say',shown:'show',shows:'show',showing:'show',showed:'show',made:'make',makes:'make',making:'make',came:'come',comes:'come',coming:'come',took:'take',takes:'take',taking:'take',taken:'take',knew:'know',knows:'know',knowing:'know',known:'know',thought:'think',thinks:'think',thinking:'think',brought:'bring',brings:'bring',found:'find',finds:'find',told:'tell',tells:'tell',men:'man',women:'woman',children:'child',wrote:'write',writes:'write',writing:'write',written:'write',spoke:'speak',speaks:'speak',speaking:'speak',spoken:'speak',felt:'feel',feels:'feel',feeling:'feel',kept:'keep',keeps:'keep',saw:'see',sees:'see',seeing:'see',seen:'see',gave:'give',gives:'give',giving:'give',given:'give'};
+function enLemma(w){
+  w=w.toLowerCase().replace(/[.,;:!?"'()\-–—]/g,'');
+  if(EN_IRREG[w])return EN_IRREG[w];
+  if(w.endsWith('ies')&&w.length>4)return w.slice(0,-3)+'y';
+  if(w.endsWith('ied')&&w.length>4)return w.slice(0,-3)+'y';
+  if(w.endsWith('ing')&&w.length>5){const s=w.slice(0,-3);return(s.length>3&&s[s.length-1]===s[s.length-2])?s.slice(0,-1):s;}
+  if(w.endsWith('ed')&&w.length>4){const s=w.slice(0,-2);return(s.length>3&&s[s.length-1]===s[s.length-2])?s.slice(0,-1):s;}
+  if(w.endsWith('er')&&w.length>4)return w.slice(0,-2);
+  if(w.endsWith('ly')&&w.length>4)return w.slice(0,-2);
+  if(w.endsWith('s')&&!w.endsWith('ss')&&w.length>3)return w.slice(0,-1);
+  return w;
+}
+
+// ── ARABIC ROOT ─────────────────────────────────────────────────────────────
+function arClean(s){
+  s=s.replace(/[\u064B-\u065F\u0670\u0640\u0671]/g,'');
+  return s.replace(/[أإآ]/g,'ا').replace(/ة/g,'ت').replace(/ى/g,'ي');
+}
+const AR_ART=['وال','فال','بال','كال','لل','ال'];
+const AR_SUF_L=['ونني','وني','تني','تموني','ونه','ونها','تموه','وهم','وهن','تان','ون','ين','ات','ان','تا','ها','هم','هن','كم','كن','نا','ني','تم','تن'];
+const AR_SUF_S=['ته','ية','ي','ت','ن','ه'];
+function arRoot(word){
+  let w=arClean(word);
+  if(w.length<=2)return w;
+  for(const a of AR_ART){const ac=arClean(a);if(w.startsWith(ac)&&w.length-ac.length>=3){w=w.slice(ac.length);break;}}
+  if(w.length>4&&'وفب'.includes(w[0]))w=w.slice(1);
+  for(const s of AR_SUF_L){const sc=arClean(s);if(w.endsWith(sc)&&w.length-sc.length>=3){w=w.slice(0,-sc.length);break;}}
+  if(w.length>3){for(const s of AR_SUF_S){const sc=arClean(s);if(w.endsWith(sc)&&w.length-sc.length>=3){w=w.slice(0,-sc.length);break;}}}
+  // Derivational patterns
+  if(w.length===4&&w[1]==='ا')return w[0]+w[2]+w[3];           // فاعل→فعل
+  if(w.length===5&&w[0]==='م'&&w[3]==='و')return w[1]+w[2]+w[4]; // مفعول→فعل
+  if(w.length===4&&w[0]==='م')return w.slice(1);                // مفعل→فعل
+  if(w.length>=5&&w.startsWith('ان'))return w.slice(2);          // انفعل
+  if(w.length>=6&&w.startsWith('است'))return w.slice(3);         // استفعل
+  if(w.length>=4&&w[0]==='ت')return w.slice(1);                 // تفعّل
+  return w;
+}
+function enTok(t){return t.toLowerCase().match(/[a-zA-Z']+/g)||[];}
+function arTok(t){return arClean(t).match(/[\u0600-\u06FF]+/g)||[];}
+
+// ── INDEX BUILDING (runs once after CSV load) ────────────────────────────────
+function buildIndex(bookObj){
+  const useMorpho=document.getElementById('morpho').checked;
+  const N=bookObj.pairs.length;
+  const enLems=[],arRoots=[],enDF={},arDF={};
+  for(const p of bookObj.pairs){
+    const el=enTok(p.en).map(w=>useMorpho?enLemma(w):w.toLowerCase());
+    const ar=arTok(p.ar).map(w=>useMorpho?arRoot(w):arClean(w));
+    enLems.push(el); arRoots.push(ar);
+    for(const t of new Set(el))enDF[t]=(enDF[t]||0)+1;
+    for(const t of new Set(ar))arDF[t]=(arDF[t]||0)+1;
+  }
+  const enAvgLen=enLems.reduce((a,b)=>a+b.length,0)/Math.max(N,1);
+  const arAvgLen=arRoots.reduce((a,b)=>a+b.length,0)/Math.max(N,1);
+  return{...bookObj,enLems,arRoots,enDF,arDF,enAvgLen,arAvgLen,N};
+}
+
+// ── BM25 SCORING ─────────────────────────────────────────────────────────────
+const K1=1.5,B=0.75;
+function bm25(queryTerms,docTerms,df,N,avgLen){
+  const tf={};for(const t of docTerms)tf[t]=(tf[t]||0)+1;
+  let score=0;
+  const dl=docTerms.length;
+  for(const qt of queryTerms){
+    const f=tf[qt]||0;
+    if(!f)continue;
+    const idf=Math.log((N-( df[qt]||0)+0.5)/(( df[qt]||0)+0.5)+1);
+    const tfNorm=(f*(K1+1))/(f+K1*(1-B+B*dl/avgLen));
+    score+=idf*tfNorm;
+  }
+  return score;
+}
+
+function proximityBonus(queryTerms,docTerms){
+  if(queryTerms.length<2)return 0;
+  const pos={};
+  docTerms.forEach((t,i)=>{if(queryTerms.includes(t)){(pos[t]=pos[t]||[]).push(i);}});
+  const covered=Object.keys(pos).length;
+  if(covered<2)return covered*0.3;
+  // Sliding window minimum span
+  const iters=Object.fromEntries(Object.entries(pos).map(([k,v])=>[k,{arr:v,i:0}]));
+  let best=Infinity;
+  while(true){
+    const vals=Object.fromEntries(Object.entries(iters).map(([k,v])=>[k,v.arr[v.i]]));
+    const mn=Math.min(...Object.values(vals)),mx=Math.max(...Object.values(vals));
+    best=Math.min(best,mx-mn);
+    const minKey=Object.keys(vals).reduce((a,b)=>vals[a]<vals[b]?a:b);
+    iters[minKey].i++;
+    if(iters[minKey].i>=iters[minKey].arr.length)break;
+  }
+  return Math.max(0,4.0-best*0.2);
+}
+
+function exactBonus(query,text,cleanFn){
+  const t=cleanFn?cleanFn(text):text.toLowerCase();
+  const q=cleanFn?cleanFn(query):query.toLowerCase();
+  if(!t.includes(q))return 0;
+  const count=t.split(q).length-1;
+  const pos=t.indexOf(q);
+  return 12+count*2+Math.max(0,1-pos/500);
+}
+
+function scoreEn(idx,bidx,query){
+  const ix=bookIndices[bidx];
+  const useMorpho=document.getElementById('morpho').checked;
+  const qTerms=enTok(query).map(w=>useMorpho?enLemma(w):w.toLowerCase());
+  const docTerms=ix.enLems[idx];
+  const b=bm25(qTerms,docTerms,ix.enDF,ix.N,ix.enAvgLen);
+  const p=proximityBonus(qTerms,docTerms);
+  const e=exactBonus(query,ix.pairs[idx].en);
+  return b+p+e;
+}
+
+function scoreAr(idx,bidx,query){
+  const ix=bookIndices[bidx];
+  const useMorpho=document.getElementById('morpho').checked;
+  const qTerms=arTok(query).map(w=>useMorpho?arRoot(w):arClean(w));
+  const docTerms=ix.arRoots[idx];
+  const b=bm25(qTerms,docTerms,ix.arDF,ix.N,ix.arAvgLen);
+  const p=proximityBonus(qTerms,docTerms);
+  const e=exactBonus(query,ix.pairs[idx].ar,arClean);
+  return b+p+e;
+}
+
+// ── MATCHING ─────────────────────────────────────────────────────────────────
+function testMatch(pairIdx,bidx,q,lang){
+  const ix=bookIndices[bidx];
+  const useMorpho=document.getElementById('morpho').checked;
+  if(lang!=='ar'){
+    const t=ix.pairs[pairIdx].en.toLowerCase(),ql=q.toLowerCase();
+    if(mode==='exact')return t.includes(ql);
+    const docLems=ix.enLems[pairIdx];
+    const qLems=enTok(q).map(w=>useMorpho?enLemma(w):w.toLowerCase());
+    if(mode==='or')return qLems.some(l=>docLems.includes(l));
+    return qLems.every(l=>docLems.includes(l));
+  }
+  if(lang!=='en'){
+    const tc=arClean(ix.pairs[pairIdx].ar),qc=arClean(q);
+    if(mode==='exact')return tc.includes(qc);
+    const docRoots=ix.arRoots[pairIdx];
+    const qRoots=arTok(q).map(w=>useMorpho?arRoot(w):arClean(w));
+    if(mode==='or')return qRoots.some(r=>docRoots.includes(r));
+    return qRoots.every(r=>docRoots.includes(r));
+  }
+  return testMatch(pairIdx,bidx,q,'en')||testMatch(pairIdx,bidx,q,'ar');
+}
+
+// ── HIGHLIGHT ────────────────────────────────────────────────────────────────
+function hlEn(text,q,excl){
+  let out=esc(text);
+  const useMorpho=document.getElementById('morpho').checked;
+  if(excl)out=out.replace(new RegExp('('+re(excl)+')','gi'),'<mark class="x">$1</mark>');
+  if(!q)return out;
+  // Exact phrase first
+  out=out.replace(new RegExp('('+re(q)+')','gi'),'<mark>$1</mark>');
+  if(useMorpho&&mode!=='exact'){
+    const words=q.split(/\s+/).filter(Boolean);
+    for(const w of words){
+      const l=enLemma(w);
+      if(l!==w)out=out.replace(new RegExp('(?<![a-zA-Z])('+re(l)+'[a-z]{0,5})(?![a-zA-Z])','gi'),m=>m.startsWith('<')?m:'<mark class="m">'+m+'</mark>');
+    }
+  } else if(mode!=='exact'){
+    for(const w of q.split(/\s+/).filter(Boolean))
+      out=out.replace(new RegExp('('+re(w)+')','gi'),'<mark>$1</mark>');
+  }
+  return out;
+}
+function hlAr(text,q,excl){
+  let out=esc(text);
+  if(excl)out=out.replace(new RegExp('('+re(excl)+')','g'),'<mark class="x">$1</mark>');
+  if(!q)return out;
+  out=out.replace(new RegExp('('+re(arClean(q))+')','g'),'<mark>$1</mark>');
+  return out;
+}
+
+// ── DATA LOADING ─────────────────────────────────────────────────────────────
+async function init(){
+  try{
+    const r=await fetch(`https://api.github.com/repos/${REPO}/contents/?ref=${BRANCH}`);
+    const items=await r.json();
+    const csvs=items.filter(f=>f.name.toLowerCase().endsWith('.csv'));
+    if(!csvs.length){
+      document.getElementById('book-list').innerHTML='<div style="font-size:12px;color:#c00">No CSV files found.</div>';
+      document.getElementById('results').innerHTML='<div class="msg">Upload CSV files to your repository.</div>';
+      return;
+    }
+    books=await Promise.all(csvs.map(async f=>{
+      const pairs=await loadCSV(f.download_url);
+      return{name:f.name.replace(/\.csv$/i,''),pairs,checked:true};
+    }));
+    rebuild();
+  }catch(e){
+    document.getElementById('book-list').innerHTML='<div style="font-size:12px;color:#c00">Could not reach repository.</div>';
+    document.getElementById('results').innerHTML='<div class="msg">Ensure the repository is public and GitHub Pages is enabled.</div>';
+  }
+}
+
+function rebuild(){
+  // Re-index all books (called on load and when morphology toggle changes)
+  bookIndices=books.map(b=>buildIndex(b));
+  renderSidebar();
+  doSearch();
+}
+
+async function loadCSV(url){
+  const r=await fetch(url),text=await r.text(),out=[];
+  for(const line of text.trim().split('\n')){
+    const cols=splitCSV(line);
+    if(cols.length>=2){
+      const en=cols[0].replace(/^"|"$/g,'').trim(),ar=cols[1].replace(/^"|"$/g,'').trim();
+      if(en&&ar)out.push({en,ar});
+    }
+  }
+  return out;
+}
+function splitCSV(line){const res=[];let cur='',q=false;for(let i=0;i<line.length;i++){if(line[i]==='"')q=!q;else if(line[i]===','&&!q){res.push(cur);cur='';}else cur+=line[i];}res.push(cur);return res;}
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+function renderSidebar(){
+  document.getElementById('book-list').innerHTML=books.map((b,i)=>`
+    <label class="book-item">
+      <input type="checkbox" ${b.checked?'checked':''} onchange="toggle(${i},this.checked)">
+      <div><div class="book-item-name">${esc(b.name)}</div><div class="book-item-count">${b.pairs.length} pairs</div></div>
+    </label>`).join('');
+}
+function toggle(i,v){books[i].checked=v;doSearch();}
+function selectAll(v){books.forEach(b=>b.checked=v);renderSidebar();doSearch();}
+function setView(v){view=v;document.querySelectorAll('#main .btn-group:first-of-type button').forEach((b,i)=>b.classList.toggle('active',(i===0&&v==='parallel')||(i===1&&v==='conc')));doSearch();}
+function setMode(m){mode=m;document.querySelectorAll('#mode-btns button').forEach((b,i)=>b.classList.toggle('active',['any','exact','or'][i]===m));doSearch();}
+
+function doSearch(){
+  const q=document.getElementById('q').value.trim();
+  const excl=document.getElementById('excl').value.trim();
+  const lang=document.getElementById('lang').value;
+  const morphoOn=document.getElementById('morpho').checked;
+  const active=books.map((b,i)=>({...b,bidx:i})).filter(b=>b.checked);
+
+  if(!active.length){
+    document.getElementById('stats').textContent='No texts selected.';
+    document.getElementById('results').innerHTML='<div class="msg">Select at least one text from the sidebar.</div>';
+    return;
+  }
+
+  const hits=[];let total=0;
+  for(const b of active){
+    const ix=bookIndices[b.bidx];
+    for(let i=0;i<ix.pairs.length;i++){
+      total++;
+      const p=ix.pairs[i];
+      if(q&&!testMatch(i,b.bidx,q,lang))continue;
+      if(excl){
+        const el=excl.toLowerCase();
+        if(p.en.toLowerCase().includes(el)||arClean(p.ar).includes(arClean(excl)))continue;
+      }
+      let score=0;
+      if(q){
+        if(lang!=='ar')score+=scoreEn(i,b.bidx,q);
+        if(lang!=='en')score+=scoreAr(i,b.bidx,q);
+      }
+      hits.push({...p,src:b.name,score});
+    }
+  }
+
+  if(q)hits.sort((a,b)=>b.score-a.score);
+  const maxScore=hits.length?Math.max(hits[0].score,0.01):0.01;
+
+  document.getElementById('stats').textContent=[
+    `${hits.length} of ${total} pairs`,
+    q?`| "${q}" (${mode}${morphoOn?', morphology':''})`:' | all pairs',
+    excl?`| excluding "${excl}"`:null,
+    `| ${active.length} text${active.length>1?'s':''} active`,
+    q&&hits.length?'| ranked by relevance (BM25)':null
+  ].filter(Boolean).join('  ');
+
+  const el=document.getElementById('results');
+  if(!hits.length){el.innerHTML='<div class="msg">No results. Try "Any order" or enable Morphology.</div>';return;}
+
+  if(view==='parallel'){
+    el.innerHTML=`<table class="ptable">
+      <thead><tr><th>#</th><th title="Relevance score (BM25 + proximity + exact phrase bonus)">Rel.</th><th>Source</th><th>English</th><th class="th-ar">Arabic</th></tr></thead>
+      <tbody>${hits.map((r,i)=>{
+        const barW=q?Math.round((r.score/maxScore)*32):0;
+        return`<tr>
+          <td class="td-n">${i+1}</td>
+          <td class="td-rel"><span class="rel-bar" style="width:${barW}px" title="score: ${r.score.toFixed(2)}"></span></td>
+          <td class="td-src" title="${esc(r.src)}">${esc(abbr(r.src,12))}</td>
+          <td class="td-en">${hlEn(r.en,q,excl)}</td>
+          <td class="td-ar">${hlAr(r.ar,q,excl)}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  } else {
+    const fw=q?q.split(/\s+/)[0]:'';
+    el.innerHTML='<div class="conc-list">'+hits.map(r=>{
+      const fi=fw?r.en.toLowerCase().indexOf(fw.toLowerCase()):-1;
+      const enLine=fi>-1
+        ?`<div class="conc-en"><span class="conc-left">${esc(r.en.slice(0,fi))}</span><span class="conc-kw">${esc(r.en.slice(fi,fi+fw.length))}</span><span class="conc-right">${esc(r.en.slice(fi+fw.length))}</span></div>`
+        :`<div class="conc-en"><span></span><span></span><span class="conc-right">${esc(r.en)}</span></div>`;
+      return`<div class="conc-item">
+        <div class="conc-meta"><span>${esc(r.src)}</span><span style="color:#ccc">score: ${r.score.toFixed(2)}</span></div>
+        ${enLine}
+        <div class="conc-ar">${esc(r.ar)}</div>
+      </div>`;
+    }).join('')+'</div>';
+  }
+}
+
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function re(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function abbr(n,l){return n.length>l?n.slice(0,l-1)+'…':n;}
+init();
+</script>
+</body>
+</html>
