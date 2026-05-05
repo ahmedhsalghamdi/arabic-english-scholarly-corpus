@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corpus Analysis – Arabic–English Scholarly Corpus</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; font-size: 14px; background: #fff; color: #111; line-height: 1.5; }
+#header { border-bottom: 2px solid #111; padding: 16px 22px 12px; }
+#header h1 { font-size: 17px; font-weight: normal; }
+#header p { font-size: 11px; color: #666; margin-top: 3px; }
+#header nav { margin-top: 8px; }
+#header nav a { font-size: 12px; color: #333; text-decoration: none; margin-right: 16px; border-bottom: 1px solid transparent; }
+#header nav a:hover, #header nav a.active { border-bottom-color: #111; color: #111; }
+
+.page { max-width: 1100px; margin: 0 auto; padding: 24px 22px 60px; }
+
+.controls { display: flex; gap: 8px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+.controls label { font-size: 11px; font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase; color: #666; }
+select { padding: 4px 8px; font-family: Georgia, serif; font-size: 12px; border: 1px solid #aaa; background: #fff; color: #111; cursor: pointer; outline: none; }
+
+.section { margin-bottom: 36px; }
+.section h2 { font-size: 12px; font-weight: bold; letter-spacing: 0.12em; text-transform: uppercase; color: #333; border-bottom: 2px solid #111; padding-bottom: 5px; margin-bottom: 14px; }
+
+/* STATS GRID */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 10px; }
+.stat-box { border: 1px solid #ccc; padding: 10px 12px; background: #f9f9f9; }
+.stat-val { font-size: 22px; font-weight: normal; font-family: Georgia, serif; color: #111; }
+.stat-lbl { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #888; margin-top: 2px; }
+
+/* COLUMNS LAYOUT */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+/* FREQ TABLE */
+.freq-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.freq-table thead th { text-align: left; font-size: 10px; font-weight: bold; letter-spacing: 0.1em; text-transform: uppercase; color: #666; background: #f0f0f0; border-bottom: 2px solid #bbb; padding: 5px 8px; }
+.freq-table thead th.r { text-align: right; }
+.freq-table tbody tr { border-bottom: 1px solid #eee; }
+.freq-table tbody tr:hover { background: #fafafa; }
+.freq-table td { padding: 4px 8px; vertical-align: middle; }
+.freq-table td.r { text-align: right; font-family: monospace; font-size: 11px; color: #888; }
+.freq-table td.ar { direction: rtl; text-align: right; font-family: 'Traditional Arabic', 'Scheherazade New', Arial, sans-serif; font-size: 15px; }
+.bar-cell { width: 80px; padding: 4px 8px; }
+.bar { height: 7px; background: #333; display: inline-block; min-width: 1px; }
+
+/* COLLOCATION TABLE */
+.coll-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.coll-table thead th { text-align: left; font-size: 10px; font-weight: bold; letter-spacing: 0.1em; text-transform: uppercase; color: #666; background: #f0f0f0; border-bottom: 2px solid #bbb; padding: 5px 8px; }
+.coll-table tbody tr { border-bottom: 1px solid #eee; }
+.coll-table tbody tr:hover { background: #fafafa; }
+.coll-table td { padding: 4px 8px; font-size: 13px; }
+.coll-table td.ar { direction: rtl; text-align: right; font-family: 'Traditional Arabic', 'Scheherazade New', Arial, sans-serif; font-size: 15px; }
+.coll-table td.num { font-family: monospace; font-size: 11px; color: #888; text-align: right; }
+.pmi-bar { height: 7px; background: #555; display: inline-block; min-width: 1px; }
+
+/* TABS */
+.tab-bar { display: flex; border-bottom: 1px solid #ccc; margin-bottom: 14px; }
+.tab { font-family: Georgia, serif; font-size: 12px; padding: 5px 12px; border: none; border-bottom: 2px solid transparent; background: none; cursor: pointer; color: #666; }
+.tab.active { color: #111; border-bottom-color: #111; font-weight: bold; }
+.tab:hover:not(.active) { color: #333; }
+
+.msg { color: #999; font-style: italic; font-size: 13px; padding: 20px 0; }
+.spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid #ddd; border-top-color: #333; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 5px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.note { font-size: 11px; color: #999; font-style: italic; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Arabic–English Scholarly Corpus</h1>
+  <p>Parallel texts repository &mdash; ahmedhsalghamdi</p>
+  <nav>
+    <a href="index.html">Search</a>
+    <a href="analysis.html" class="active">Analysis &amp; Statistics</a>
+  </nav>
+</div>
+
+<div class="page">
+
+  <div class="controls">
+    <label>Text:</label>
+    <select id="book-sel" onchange="render()">
+      <option value="__all__">All texts (combined)</option>
+    </select>
+    <label style="margin-left:10px">Language:</label>
+    <select id="lang-sel" onchange="render()">
+      <option value="en">English</option>
+      <option value="ar">Arabic</option>
+    </select>
+  </div>
+
+  <!-- STATS -->
+  <div class="section">
+    <h2>Corpus Statistics</h2>
+    <div class="stats-grid" id="stats-grid"><div class="msg"><span class="spinner"></span>Loading…</div></div>
+  </div>
+
+  <!-- WORD FREQUENCY -->
+  <div class="section">
+    <h2>Word Frequency</h2>
+    <p class="note">Stopwords removed. Arabic shows approximate stems; English shows lemmas.</p>
+    <div id="word-freq"><div class="msg"><span class="spinner"></span></div></div>
+  </div>
+
+  <!-- NGRAMS -->
+  <div class="section">
+    <h2>Frequent Phrases</h2>
+    <div class="tab-bar">
+      <button class="tab active" onclick="setNgramTab('bi')">Bigrams (2 words)</button>
+      <button class="tab" onclick="setNgramTab('tri')">Trigrams (3 words)</button>
+    </div>
+    <div id="ngram-content"><div class="msg"><span class="spinner"></span></div></div>
+  </div>
+
+  <!-- COLLOCATIONS -->
+  <div class="section">
+    <h2>Collocations</h2>
+    <p class="note">Words that appear near each other more often than by chance. Ranked by PMI (pointwise mutual information) score.</p>
+    <div id="coll-content"><div class="msg"><span class="spinner"></span></div></div>
+  </div>
+
+</div>
+
+<script>
+const REPO='ahmedhsalghamdi/arabic-english-scholarly-corpus', BRANCH='main';
+let data=null, ngramTab='bi';
+
+async function init(){
+  try {
+    // Try to load pre-computed corpus_data.json first
+    const r=await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/corpus_data.json`);
+    if(r.ok){
+      data=await r.json();
+      // Populate book selector
+      const sel=document.getElementById('book-sel');
+      for(const b of data.books){
+        const opt=document.createElement('option');
+        opt.value=b.name; opt.textContent=b.name;
+        sel.appendChild(opt);
+      }
+      render();
+    } else {
+      // Fall back: compute in browser from CSVs
+      await loadFromCSVs();
+    }
+  } catch(e) {
+    await loadFromCSVs();
+  }
+}
+
+// ── BROWSER FALLBACK: compute analysis from raw CSVs ──
+const EN_STOP=new Set('a an the and or but in on at to of for with by from as is was are were be been being have has had do does did will would could should may might must shall can this that these those it its i we you he she they them their our your his her my me us him all also just not no nor so if when where which who whom what how then than there here s t ve re ll d'.split(' '));
+const AR_STOP=new Set('في على من إلى عن مع أن ما لا هو هي هم هن نحن أنت أنتم كان كانت كانوا يكون تكون وقد قد لقد هذا هذه ذلك تلك الذي التي الذين وهو وهي وهم أو ثم لكن بل حتى إذا لما كما مما بما فما وما لأن بأن إن ولا فلا كل بعض له لها لهم لنا لكم بين عند عنه عنها منه منها به بها فيه فيها أي أيضا'.split(' '));
+const AR_PRE=['وال','فال','بال','كال','لل','ال','وا','فا','با','كا','لا','و','ف','ب','ك','ل','س','أ'];
+const AR_SUF=['ونني','وني','تني','تموني','ونه','ونها','تان','ون','ين','ات','ان','تا','ها','هم','هن','كم','كن','نا','ني','تم','تن','ته','ية','ي','ة','ت','ن','ا','و'];
+function arStrip(w){w=w.replace(/[\u064B-\u065F\u0670\u0640]/g,'');if(w.length<3)return w;for(const p of AR_PRE){if(w.startsWith(p)&&w.length-p.length>=3){w=w.slice(p.length);break;}}for(const s of AR_SUF){if(w.endsWith(s)&&w.length-s.length>=3){w=w.slice(0,-s.length);break;}}return w;}
+const EN_IRREG={ran:'run',runs:'run',running:'run',was:'be',were:'be',is:'be',are:'be',been:'be',had:'have',has:'have',did:'do',does:'do',said:'say',made:'make',came:'come',took:'take',knew:'know',thought:'think',found:'find',told:'tell',men:'man',women:'woman',children:'child'};
+function enLemma(w){w=w.toLowerCase().replace(/[.,;:!?"'()\-]/g,'');if(EN_IRREG[w])return EN_IRREG[w];if(w.endsWith('ies')&&w.length>4)return w.slice(0,-3)+'y';if(w.endsWith('ing')&&w.length>5){const s=w.slice(0,-3);return s.length>3&&s[s.length-1]===s[s.length-2]?s.slice(0,-1):s;}if(w.endsWith('ed')&&w.length>4){const s=w.slice(0,-2);return s.length>3&&s[s.length-1]===s[s.length-2]?s.slice(0,-1):s;}if(w.endsWith('s')&&!w.endsWith('ss')&&w.length>3)return w.slice(0,-1);return w;}
+function enTok(t){return(t.toLowerCase().match(/[a-zA-Z']+/g)||[]).filter(w=>w.length>2&&!EN_STOP.has(w));}
+function arTok(t){return(t.replace(/[\u064B-\u065F\u0670\u0640]/g,'').match(/[\u0600-\u06FF]+/g)||[]).filter(w=>w.length>2&&!AR_STOP.has(w));}
+
+function countFreq(pairs,lang){
+  const c={};
+  for(const p of pairs){const toks=lang==='en'?enTok(p.en).map(enLemma):arTok(p.ar).map(arStrip);for(const t of toks)c[t]=(c[t]||0)+1;}
+  return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,80).map(([w,n])=>([w,n]));
+}
+function countNgrams(pairs,lang,n){
+  const c={};
+  for(const p of pairs){
+    const toks=lang==='en'?enTok(p.en):arTok(p.ar);
+    for(let i=0;i<=toks.length-n;i++){const g=toks.slice(i,i+n).join(' ');c[g]=(c[g]||0)+1;}
+  }
+  return Object.entries(c).filter(([,v])=>v>1).sort((a,b)=>b[1]-a[1]).slice(0,50).map(([w,n])=>([w,n]));
+}
+function countColls(pairs,lang,win=4){
+  const wc={},pc={};let total=0;
+  for(const p of pairs){
+    let toks=lang==='en'?enTok(p.en).map(enLemma):arTok(p.ar).map(arStrip);
+    total+=toks.length;
+    for(const t of toks)wc[t]=(wc[t]||0)+1;
+    for(let i=0;i<toks.length;i++){for(let j=Math.max(0,i-win);j<Math.min(toks.length,i+win+1);j++){if(i!==j){const k=[toks[i],toks[j]].sort().join('|||');pc[k]=(pc[k]||0)+1;}}}
+  }
+  const res=[];
+  for(const[k,cnt] of Object.entries(pc)){
+    if(cnt<3)continue;
+    const[w1,w2]=k.split('|||');
+    if((wc[w1]||0)<3||(wc[w2]||0)<3)continue;
+    const pmi=Math.log2((cnt*total)/((wc[w1]||1)*(wc[w2]||1)));
+    if(pmi>1.5)res.push({w1,w2,count:cnt,pmi:Math.round(pmi*100)/100});
+  }
+  return res.sort((a,b)=>b.pmi-a.pmi).slice(0,60);
+}
+function calcStats(pairs,lang){
+  const all=[];
+  for(const p of pairs){const t=lang==='en'?(p.en.toLowerCase().match(/[a-zA-Z']+/g)||[]):(p.ar.replace(/[\u064B-\u065F\u0670\u0640]/g,'').match(/[\u0600-\u06FF]+/g)||[]);all.push(...t);}
+  return{total_tokens:all.length,unique_tokens:new Set(all).size,sentences:pairs.length,avg_len:Math.round(all.length/Math.max(pairs.length,1)*10)/10,ttr:Math.round(new Set(all).size/Math.max(all.length,1)*1000)/1000};
+}
+
+async function loadFromCSVs(){
+  try{
+    const r=await fetch(`https://api.github.com/repos/${REPO}/contents/?ref=${BRANCH}`);
+    const items=await r.json();
+    const csvs=items.filter(f=>f.name.toLowerCase().endsWith('.csv'));
+    if(!csvs.length){document.getElementById('stats-grid').innerHTML='<div class="msg">No CSV files found in repository.</div>';return;}
+    const books=[];
+    for(const f of csvs){
+      const pr=await fetch(f.download_url),text=await pr.text(),pairs=[];
+      for(const line of text.trim().split('\n')){const cols=splitCSV(line);if(cols.length>=2){const en=cols[0].replace(/^"|"$/g,'').trim(),ar=cols[1].replace(/^"|"$/g,'').trim();if(en&&ar)pairs.push({en,ar});}}
+      books.push({name:f.name.replace(/\.csv$/i,''),pairs});
+    }
+    const allPairs=books.flatMap(b=>b.pairs);
+    data={books:books.map(b=>({name:b.name,pairs:b.pairs.length,en:{stats:calcStats(b.pairs,'en'),word_freq:countFreq(b.pairs,'en'),bigrams:countNgrams(b.pairs,'en',2),trigrams:countNgrams(b.pairs,'en',3),collocations:countColls(b.pairs,'en')},ar:{stats:calcStats(b.pairs,'ar'),word_freq:countFreq(b.pairs,'ar'),bigrams:countNgrams(b.pairs,'ar',2),trigrams:countNgrams(b.pairs,'ar',3),collocations:countColls(b.pairs,'ar')}})),global:{total_pairs:allPairs.length,total_books:books.length,en:{stats:calcStats(allPairs,'en'),word_freq:countFreq(allPairs,'en'),bigrams:countNgrams(allPairs,'en',2),trigrams:countNgrams(allPairs,'en',3),collocations:countColls(allPairs,'en')},ar:{stats:calcStats(allPairs,'ar'),word_freq:countFreq(allPairs,'ar'),bigrams:countNgrams(allPairs,'ar',2),trigrams:countNgrams(allPairs,'ar',3),collocations:countColls(allPairs,'ar')}}};
+    const sel=document.getElementById('book-sel');
+    for(const b of data.books){const opt=document.createElement('option');opt.value=b.name;opt.textContent=b.name;sel.appendChild(opt);}
+    render();
+  }catch(e){document.getElementById('stats-grid').innerHTML='<div class="msg">Could not load corpus data. Ensure the repository is public.</div>';}
+}
+function splitCSV(line){const res=[];let cur='',q=false;for(let i=0;i<line.length;i++){if(line[i]==='"')q=!q;else if(line[i]===','&&!q){res.push(cur);cur='';}else cur+=line[i];}res.push(cur);return res;}
+
+// ── RENDER ──
+function getSection(){
+  const sel=document.getElementById('book-sel').value;
+  const lang=document.getElementById('lang').value||document.getElementById('lang-sel').value;
+  if(sel==='__all__')return{sec:data.global[lang],stats:data.global,lang};
+  const book=data.books.find(b=>b.name===sel);
+  return book?{sec:book[lang],stats:book,lang}:{sec:null,stats:null,lang};
+}
+
+function render(){
+  if(!data)return;
+  const lang=document.getElementById('lang-sel').value;
+  const bookSel=document.getElementById('book-sel').value;
+  let sec,stats;
+  if(bookSel==='__all__'){sec=data.global[lang];stats=data.global;}
+  else{const b=data.books.find(b=>b.name===bookSel);if(!b)return;sec=b[lang];stats=b;}
+
+  // Stats
+  const s=sec.stats;
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat-box"><div class="stat-val">${(stats.total_pairs||stats.pairs||0).toLocaleString()}</div><div class="stat-lbl">Sentence Pairs</div></div>
+    <div class="stat-box"><div class="stat-val">${(s.total_tokens||0).toLocaleString()}</div><div class="stat-lbl">Total Tokens</div></div>
+    <div class="stat-box"><div class="stat-val">${(s.unique_tokens||0).toLocaleString()}</div><div class="stat-lbl">Unique Tokens</div></div>
+    <div class="stat-box"><div class="stat-val">${s.avg_len||0}</div><div class="stat-lbl">Avg. Sentence Length</div></div>
+    <div class="stat-box"><div class="stat-val">${s.ttr||0}</div><div class="stat-lbl">Type/Token Ratio</div></div>
+    ${bookSel==='__all__'?`<div class="stat-box"><div class="stat-val">${data.global.total_books}</div><div class="stat-lbl">Texts</div></div>`:''}
+  `;
+
+  // Word frequency
+  const wf=sec.word_freq||[];
+  const maxWF=wf.length?wf[0][1]:1;
+  const isAr=lang==='ar';
+  document.getElementById('word-freq').innerHTML=`
+    <table class="freq-table">
+      <thead><tr><th>#</th><th class="${isAr?'r':''}">${isAr?'Stem (Arabic)':'Lemma (English)'}</th><th>Count</th><th>Frequency</th></tr></thead>
+      <tbody>${wf.slice(0,50).map(([w,n],i)=>`<tr>
+        <td style="color:#bbb;font-family:monospace;font-size:10px">${i+1}</td>
+        <td class="${isAr?'ar':''}">${esc(w)}</td>
+        <td class="r">${n}</td>
+        <td class="bar-cell"><span class="bar" style="width:${Math.round((n/maxWF)*75)}px"></span></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+
+  renderNgrams(sec);
+  renderColls(sec,lang);
+}
+
+function setNgramTab(t){ngramTab=t;document.querySelectorAll('.tab-bar .tab').forEach((b,i)=>b.classList.toggle('active',i===(t==='bi'?0:1)));const lang=document.getElementById('lang-sel').value,bookSel=document.getElementById('book-sel').value;let sec;if(bookSel==='__all__')sec=data.global[lang];else{const b=data.books.find(b=>b.name===bookSel);sec=b?b[lang]:null;}if(sec)renderNgrams(sec);}
+
+function renderNgrams(sec){
+  const isAr=document.getElementById('lang-sel').value==='ar';
+  const items=ngramTab==='bi'?(sec.bigrams||[]):(sec.trigrams||[]);
+  const maxN=items.length?items[0][1]:1;
+  document.getElementById('ngram-content').innerHTML=items.length?`
+    <table class="freq-table">
+      <thead><tr><th>#</th><th class="${isAr?'r':''}">${ngramTab==='bi'?'Bigram':'Trigram'}</th><th>Count</th><th>Frequency</th></tr></thead>
+      <tbody>${items.slice(0,40).map(([w,n],i)=>`<tr>
+        <td style="color:#bbb;font-family:monospace;font-size:10px">${i+1}</td>
+        <td class="${isAr?'ar':''}">${esc(w)}</td>
+        <td class="r">${n}</td>
+        <td class="bar-cell"><span class="bar" style="width:${Math.round((n/maxN)*75)}px"></span></td>
+      </tr>`).join('')}</tbody>
+    </table>`:'<div class="msg">Not enough data for phrase analysis.</div>';
+}
+
+function renderColls(sec,lang){
+  const isAr=lang==='ar';
+  const items=sec.collocations||[];
+  const maxP=items.length?items[0].pmi:1;
+  document.getElementById('coll-content').innerHTML=items.length?`
+    <table class="coll-table">
+      <thead><tr><th>Word 1</th><th>Word 2</th><th class="num">Co-occurrences</th><th class="num">PMI Score</th><th style="width:80px">Strength</th></tr></thead>
+      <tbody>${items.slice(0,50).map(r=>`<tr>
+        <td class="${isAr?'ar':''}">${esc(r.w1)}</td>
+        <td class="${isAr?'ar':''}">${esc(r.w2)}</td>
+        <td class="num">${r.count}</td>
+        <td class="num">${r.pmi}</td>
+        <td><span class="pmi-bar" style="width:${Math.round((r.pmi/maxP)*70)}px"></span></td>
+      </tr>`).join('')}</tbody>
+    </table>`:'<div class="msg">Not enough data for collocation analysis. Corpus may be too small.</div>';
+}
+
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+init();
+</script>
+</body>
+</html>
